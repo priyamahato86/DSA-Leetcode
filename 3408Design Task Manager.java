@@ -1,0 +1,76 @@
+// There is a task management system that allows users to manage their tasks, each associated with a priority. The system should efficiently handle adding, modifying, executing, and removing tasks.
+
+// Implement the TaskManager class:
+
+// TaskManager(vector<vector<int>>& tasks) initializes the task manager with a list of user-task-priority triples. Each element in the input list is of the form [userId, taskId, priority], which adds a task to the specified user with the given priority.
+
+// void add(int userId, int taskId, int priority) adds a task with the specified taskId and priority to the user with userId. It is guaranteed that taskId does not exist in the system.
+
+// void edit(int taskId, int newPriority) updates the priority of the existing taskId to newPriority. It is guaranteed that taskId exists in the system.
+
+// void rmv(int taskId) removes the task identified by taskId from the system. It is guaranteed that taskId exists in the system.
+
+// int execTop() executes the task with the highest priority across all users. If there are multiple tasks with the same highest priority, execute the one with the highest taskId. After executing, the taskId is removed from the system. Return the userId associated with the executed task. If no tasks are available, return -1.
+
+// Note that a user may be assigned multiple tasks.
+
+##CODE:
+class TaskManager {
+        private static class Task {
+        int priority;
+        int taskId;
+
+        Task(int priority, int taskId) {
+            this.priority = priority;
+            this.taskId = taskId;
+        }
+    }
+
+    private PriorityQueue<Task> maxHeap;
+    private Map<Integer, Integer> taskPriorityMap; 
+    private Map<Integer, Integer> taskOwnerMap; 
+    public TaskManager(List<List<Integer>> tasks) {
+        maxHeap = new PriorityQueue<>(
+            (a, b) -> {
+                if (a.priority != b.priority) {
+                    return b.priority - a.priority; 
+                }
+                return b.taskId - a.taskId;         
+            }
+        );
+        taskPriorityMap = new HashMap<>();
+        taskOwnerMap = new HashMap<>();
+
+        for (List<Integer> t : tasks) {
+            add(t.get(0), t.get(1), t.get(2));
+        }
+    }
+    
+    public void add(int userId, int taskId, int priority) {
+         maxHeap.offer(new Task(priority, taskId));
+        taskPriorityMap.put(taskId, priority);
+        taskOwnerMap.put(taskId, userId);
+    }
+    
+    public void edit(int taskId, int newPriority) {
+        maxHeap.offer(new Task(newPriority, taskId));
+        taskPriorityMap.put(taskId, newPriority);
+    }
+    
+    public void rmv(int taskId) {
+         taskPriorityMap.put(taskId, -1);
+    }
+    
+    public int execTop() {
+        while (!maxHeap.isEmpty()) {
+            Task top = maxHeap.poll();
+            int currPriority = taskPriorityMap.getOrDefault(top.taskId, -1);
+
+            if (top.priority == currPriority) {
+                taskPriorityMap.put(top.taskId, -1);
+                return taskOwnerMap.get(top.taskId);
+            }
+        }
+        return -1;
+    }
+}
